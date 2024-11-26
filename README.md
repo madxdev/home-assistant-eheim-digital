@@ -33,7 +33,7 @@ Install [HACS](https://github.com/custom-components/hacs) (Home Assistant Commun
 
 ### Step 2
 Add this repository as custom repository to HACS.
-You can do this by copying (`git clone`) this contents of this repository in the `/config/custom_components` folder.
+You can do this by copying the `custom_components\eheim_digital` directory in this repository to the `/config/custom_components` folder.
 
 ### Step 3
 Install Eheim Digital Integration from HACS 
