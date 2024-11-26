@@ -28,11 +28,13 @@ Join our [discord server](https://discord.gg/bHDHqMyuDy) to talk about the integ
 
 ## Installation
 
+The easiest way to install this component is via [HACS](https://www.hacs.xyz/)
+
 ### Step 1
 Install [HACS](https://github.com/custom-components/hacs) (Home Assistant Community Store)
 
 ### Step 2
-Add this repository as custom repository to HACS
+Add this repository as custom repository to HACS.
 
 ### Step 3
 Install Eheim Digital Integration from HACS 
@@ -42,3 +44,7 @@ Restart Home Assistant
 
 ### Step 5
 Configure Integration from Home Assistant Integration menu
+
+## Manual installtion
+
+if you cannot use HACS you can also copying the `custom_components\eheim_digital` directory in this repository to the `/config/custom_components` folder manually and restart Home Assistant.
