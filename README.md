@@ -32,7 +32,8 @@ Join our [discord server](https://discord.gg/bHDHqMyuDy) to talk about the integ
 Install [HACS](https://github.com/custom-components/hacs) (Home Assistant Community Store)
 
 ### Step 2
-Add this repository as custom repository to HACS
+Add this repository as custom repository to HACS.
+You can do this by copying (`git clone`) this contents of this repository in the `/config/custom_components` folder.
 
 ### Step 3
 Install Eheim Digital Integration from HACS 
