@@ -208,7 +208,7 @@ SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
         name="Next pH Service",
         entity_registry_enabled_default=True,
         value_fn=lambda data: (
-            dt_util.utcnow() + timedelta(days=data.get("serviceTime", 0))
+            dt_util.as_utc(dt_util.now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=data.get("serviceTime", 0)))
         ),
     ),
 )
