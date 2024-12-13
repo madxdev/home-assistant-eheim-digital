@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/davidm-glitch/home-assistant-eheim-digital/issues",
   "version": "1.0",
-  "requirements": ["websockets==13.0"]
+  "requirements": ["websockets"]
 }
