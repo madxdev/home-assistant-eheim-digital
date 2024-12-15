@@ -41,6 +41,32 @@ class EheimSensorDescription(SensorEntityDescription, EheimSensorDescriptionMixi
     attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
 
 
+def _determine_current_setpoint(data) :
+    if data["mode"] == 0 : # Simple setpoint, use sollPH
+        return round((int(data["sollPH"]) / 10), 1)
+    elif data["mode"] == 1: # Bio mode, use the schedule
+        now = datetime.now()
+        currentMin = now.hour * 60 + now.minute
+        if data["expert"] == 0: # Not expert mode, use dayStartT etc
+            if currentMin < data["dayStartT"] or currentMin >= data["nightStartT"] :
+                return round((int(data["sollPH"]-data["nReduce"]) / 10), 1)
+            else:
+                return round((int(data["sollPH"]) / 10), 1)
+        elif data["expert"] == 1: # Expert mode, use schedule
+            sollPH = data["schedule"][-1][1]
+            for schedule in (data["schedule"]):
+                if currentMin >= schedule[0]:
+                    sollPH = schedule[1]
+            return round((int(sollPH) / 10), 1)
+        else:
+            # There is a "Smart Mode", but since I only have one device, I cannot pair it with a LED controller to test this
+            LOGGER.warning(
+                "phControl+e at %s is set to mode %d, this mode has not been implemented in this component. PH setpoint is assumed to be %.1f", 
+                mac_address, data["mode"], round(int(data["sollPH"])/10, 1)
+            )
+            return round((int(data["sollPH"]) / 10), 1)
+
+
 SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
     # Heater Sensors
     EheimSensorDescription(
@@ -171,7 +197,7 @@ SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
         device_class=SensorDeviceClass.PH,
         name="Target pH",
         entity_registry_enabled_default=True,
-        value_fn=lambda data: round((int(data["sollPH"]) / 10), 1),
+        value_fn=lambda data: _determine_current_setpoint(data) 
     ),
     EheimSensorDescription(
         key="ph_dayStart_time",
