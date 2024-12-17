@@ -1,11 +1,12 @@
 """EHEIM Device representation."""
+
 from .const import LOGGER, DEVICE_VERSIONS, DEVICE_GROUPS, FILTER_PUMP_MODES
 
 
 class EheimDevice:
     """EHEIM Device representation."""
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict, ip: str) -> None:
         """EHEIM Device initialization."""
         self._title = data.get("title")
         self._mac = data.get("from")
@@ -34,9 +35,13 @@ class EheimDevice:
         self._unit = data.get("unit")
         self._demo_use = data.get("demoUse")
         self._sys_led = data.get("sysLED")  # Optional
+        self._ip = ip
 
         LOGGER.debug(
-            "DEVICES: EheimDevice %s: with MAC: %s initialized", self.name, self._mac
+            "DEVICES: EheimDevice %s: with MAC: %s IP %s initialized",
+            self.name,
+            self._mac,
+            self._ip,
         )
         LOGGER.debug("DEVICES: Initializing with data: %s", data)
 
@@ -64,6 +69,11 @@ class EheimDevice:
     def mac(self) -> str:
         """MAC address of the device."""
         return self._mac
+
+    @property
+    def ip(self) -> str:
+        """Host address of the device."""
+        return self._ip
 
     @property
     def device_name(self) -> str:

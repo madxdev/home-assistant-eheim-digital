@@ -1,13 +1,12 @@
 """The EHEIM Digital integration."""
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_IP_ADDRESS
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-
+from .api_client import EheimDigitalAPIClient
 from .const import DOMAIN, LOGGER, PLATFORMS
-from .websocket import EheimDigitalWebSocketClient
 from .coordinator import EheimDigitalDataUpdateCoordinator
 
 
@@ -18,10 +17,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    websocket_client = EheimDigitalWebSocketClient(entry.data[CONF_IP_ADDRESS])
-    devices = await websocket_client.fetch_devices()
+    api_client = EheimDigitalAPIClient(
+        entry.data[CONF_IP_ADDRESS],
+        username="api",
+        password="admin",
+    )
+    devices = await api_client.fetch_devices()
 
-    coordinator = EheimDigitalDataUpdateCoordinator(hass, entry, websocket_client)
+    coordinator = EheimDigitalDataUpdateCoordinator(hass, entry, api_client)
     coordinator.devices = devices
 
     await coordinator.async_config_entry_first_refresh()
@@ -53,6 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if coordinator:
+        await coordinator.api_client.close()
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:

@@ -8,6 +8,6 @@
   "documentation": "https://github.com/davidm-glitch/home-assistant-eheim-digital",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/davidm-glitch/home-assistant-eheim-digital/issues",
-  "version": "1.0",
-  "requirements": ["websockets==13.1"]
+  "version": "2.0",
+  "requirements": ["aiohttp"]
 }

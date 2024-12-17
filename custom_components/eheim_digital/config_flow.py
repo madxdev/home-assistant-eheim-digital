@@ -1,11 +1,15 @@
 """Adds config flow for eheim_digital."""
+
 from __future__ import annotations
+
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS
+
+from .api_client import EheimDigitalAPIClient, EheimDigitalError
 from .const import DOMAIN, LOGGER
 
-from .websocket import (EheimDigitalWebSocketClient,EheimDigitalWebSocketClientCommunicationError)
 
 class EheimDigitalFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for eheim_digital."""
@@ -22,15 +26,12 @@ class EheimDigitalFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             LOGGER.debug("User input received: %s", user_input)
             try:
-                await self._test_host_connection(
-                    host=user_input[CONF_IP_ADDRESS]
-                )
+                await self._test_host_connection(host=user_input[CONF_IP_ADDRESS])
                 LOGGER.debug("Connection successful, creating entry")
                 return self.async_create_entry(
-                    title=user_input[CONF_IP_ADDRESS],
-                    data=user_input
+                    title=user_input[CONF_IP_ADDRESS], data=user_input
                 )
-            except EheimDigitalWebSocketClientCommunicationError:
+            except EheimDigitalError:
                 LOGGER.warning("Communication error with host")
                 errors["base"] = "communication_error"
 
@@ -48,10 +49,12 @@ class EheimDigitalFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _test_host_connection(self, host: str) -> None:
         """Test the connection to the given host."""
-        LOGGER.debug("Testing host connection: %s", host)
-        websocket_client = EheimDigitalWebSocketClient(host)
-        await websocket_client.connect_websocket()
-        LOGGER.debug("Connected to WebSocket, testing further if needed")
+        LOGGER.debug(f"Testing host connection: {host}")
+        api_client = EheimDigitalAPIClient(host, "api", "admin")
+        devices = await api_client.get(host, "devicelist")
+        if not devices:
+            raise EheimDigitalError("No devices find on host")
+        LOGGER.debug(f"Connected to device {devices}")
         # Perform other tests here if needed
-        await websocket_client.disconnect_websocket()
+        await api_client.close()
         LOGGER.debug("Host connection test completed")

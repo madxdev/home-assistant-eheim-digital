@@ -1,4 +1,5 @@
 """Constants for eheim_digital."""
+
 from logging import Logger, getLogger
 
 LOGGER: Logger = getLogger(__package__)
@@ -7,7 +8,11 @@ NAME = "EHEIM Digital"
 DOMAIN = "eheim_digital"
 VERSION = "0.0.1"
 UPDATE_INTERVAL = 30
-PLATFORMS = ["sensor", "binary_sensor"]  # ["sensor", "binary_sensor", "light"]
+PLATFORMS = [
+    "binary_sensor",
+    "sensor",
+    "switch",
+]  # ["sensor", "binary_sensor", "light"]
 
 DEVICE_TYPES = {
     "filter": {"name": "Filter", "icon": "mdi:filter"},
@@ -37,6 +42,29 @@ DEVICE_VERSIONS = {
     17: "EHEIM_CLASSIC_LED_CTRL_PLUS_E",
     18: "EHEIM_CLASSIC_VARIO",
 }
+
+DEVICE_ENDPOINTS = {
+    0: "UNDEFINED",
+    1: "UNKNOWN",
+    2: "UNKNOWN",
+    3: "light",
+    4: "professionel5e",
+    5: "thermocontrol",
+    6: "autofeeder",
+    7: "climacontrol",
+    8: "UNKNOWN",
+    9: "phcontrol",
+    10: "UNKNOWN",
+    11: "reeflexuvX",
+    12: "UNKNOWN",
+    13: "UNKNOWN",
+    14: "UNKNOWN",
+    15: "UNKNOWN",
+    16: "UNKNOWN",
+    17: "UNKNOWN",
+    18: "classicvario",
+}
+
 DEVICE_GROUPS = {
     "filter": [
         DEVICE_VERSIONS[1],
