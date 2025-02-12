@@ -10,11 +10,13 @@ VERSION = "0.0.1"
 UPDATE_INTERVAL = 30
 PLATFORMS = [
     "binary_sensor",
+    "button",
     "sensor",
     "switch",
-]  # ["sensor", "binary_sensor", "light"]
+]
 
 DEVICE_TYPES = {
+    "feeder": {"name": "Feeder", "icon": "mdi:food"},
     "filter": {"name": "Filter", "icon": "mdi:filter"},
     "heater": {"name": "Heater", "icon": "mdi:thermometer"},
     "led_control": {"name": "LED Control", "icon": "mdi:led-strip-variant"},
@@ -81,9 +83,9 @@ DEVICE_GROUPS = {
     ],
     "heater": [DEVICE_VERSIONS[5], DEVICE_VERSIONS[12], DEVICE_VERSIONS[13]],
     "ph_control": [DEVICE_VERSIONS[9]],
+    "feeder": [DEVICE_VERSIONS[6]],
     "other": [
         DEVICE_VERSIONS[0],
-        DEVICE_VERSIONS[6],
         DEVICE_VERSIONS[7],
         DEVICE_VERSIONS[10],
         DEVICE_VERSIONS[14],
@@ -109,6 +111,9 @@ FILTER_PUMP_MODES = {
     "PM_RESET": 32768,
 }
 
+FILTER_FLOW_CONSTANT = 1112
+# FILTER_FLOW_CONSTANT = 925
+
 # Heater modes
 HEATER_MODES = {}
 
@@ -117,3 +122,6 @@ LED_CONTROL_MODES = {}
 
 # pH Control modes
 PH_CONTROL_MODES = {}
+
+# Feeder modes
+FEEDER_MODES = {}

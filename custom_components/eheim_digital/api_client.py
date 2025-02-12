@@ -8,7 +8,7 @@ from aiohttp import BasicAuth, ClientError, ClientSession, ClientTimeout
 from .const import DEVICE_ENDPOINTS, LOGGER
 from .devices import EheimDevice
 
-DEFAULT_TIMEOUT = 2
+DEFAULT_TIMEOUT = 10
 
 
 class EheimDigitalError(Exception):
@@ -115,16 +115,17 @@ class EheimDigitalAPIClient:
         device_list = await self.get(self._master_host_ip, "devicelist")
 
         devices = []
-        for ip in device_list["clientIPList"]:
-            response = await self.get(ip, "userdata")
-            device = EheimDevice(response, ip)
+        for mac in device_list["clientList"]:
+            params = {"to": mac}
+            response = await self.get(self._master_host_ip, "userdata", params=params)
+            device = EheimDevice(response)
             devices.append(device)
 
         LOGGER.debug(f"API Client: Devices: {devices}")
 
         for device in devices:
             LOGGER.debug(
-                f"API Client: Device Details: title={device.title}, mac={device.mac}, mac={device.ip}, name={device.name}, aq_name={device.aq_name}, mode={device.mode}, version={device.version}"
+                f"API Client: Device Details: title={device.title}, mac={device.mac}, name={device.name}, aq_name={device.aq_name}, mode={device.mode}, version={device.version}"
             )
 
         return devices
@@ -137,7 +138,6 @@ class EheimDigitalAPIClient:
         endpoint = DEVICE_ENDPOINTS[device.version]
         params = {"to": device.mac}
         return await self.get(self._master_host_ip, endpoint, params=params)
-        # return await self.get(device.ip, endpoint)
 
     async def set_phcontrol_state(self, device: EheimDevice, state: bool) -> None:
         """Set pH control active."""
@@ -153,4 +153,12 @@ class EheimDigitalAPIClient:
             self._master_host_ip,
             "professionel5e/active",
             {"to": device.mac, "active": 1 if state else 0},
+        )
+
+    async def feeder_manual_feed(self, device: EheimDevice) -> None:
+        """Set filter active."""
+        await self.post(
+            self._master_host_ip,
+            "autofeeder/feed",
+            {"to": device.mac},
         )

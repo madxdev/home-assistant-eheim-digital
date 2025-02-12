@@ -1,30 +1,30 @@
 """Platform for Sensor integration"""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 from datetime import datetime, timedelta
-
+import math
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import dt as dt_util
 
 from . import EheimDigitalDataUpdateCoordinator
+from .const import DOMAIN, LOGGER
 from .devices import EheimDevice
-from .const import LOGGER, DOMAIN
 
 
 @dataclass
@@ -41,28 +41,30 @@ class EheimSensorDescription(SensorEntityDescription, EheimSensorDescriptionMixi
     attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
 
 
-def _determine_current_setpoint(data) :
-    if data["mode"] == 0 : # Simple setpoint, use sollPH
+def _determine_current_setpoint(data):
+    if data["mode"] == 0:  # Simple setpoint, use sollPH
         return round((int(data["sollPH"]) / 10), 1)
-    elif data["mode"] == 1: # Bio mode, use the schedule
+    elif data["mode"] == 1:  # Bio mode, use the schedule
         now = datetime.now()
         currentMin = now.hour * 60 + now.minute
-        if data["expert"] == 0: # Not expert mode, use dayStartT etc
-            if currentMin < data["dayStartT"] or currentMin >= data["nightStartT"] :
-                return round((int(data["sollPH"]-data["nReduce"]) / 10), 1)
+        if data["expert"] == 0:  # Not expert mode, use dayStartT etc
+            if currentMin < data["dayStartT"] or currentMin >= data["nightStartT"]:
+                return round((int(data["sollPH"] - data["nReduce"]) / 10), 1)
             else:
                 return round((int(data["sollPH"]) / 10), 1)
-        elif data["expert"] == 1: # Expert mode, use schedule
+        elif data["expert"] == 1:  # Expert mode, use schedule
             sollPH = data["schedule"][-1][1]
-            for schedule in (data["schedule"]):
+            for schedule in data["schedule"]:
                 if currentMin >= schedule[0]:
                     sollPH = schedule[1]
             return round((int(sollPH) / 10), 1)
         else:
             # There is a "Smart Mode", but since I only have one device, I cannot pair it with a LED controller to test this
             LOGGER.warning(
-                "phControl+e at %s is set to mode %d, this mode has not been implemented in this component. PH setpoint is assumed to be %.1f", 
-                mac_address, data["mode"], round(int(data["sollPH"])/10, 1)
+                "phControl+e at %s is set to mode %d, this mode has not been implemented in this component. PH setpoint is assumed to be %.1f",
+                mac_address,
+                data["mode"],
+                round(int(data["sollPH"]) / 10, 1),
             )
             return round((int(data["sollPH"]) / 10), 1)
 
@@ -146,6 +148,16 @@ SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
         native_unit_of_measurement="s",
         value_fn=lambda data: data.get("turnOffTime"),
     ),
+    EheimSensorDescription(
+        key="filter_flow_rate",
+        icon="mdi:waves-arrow-left",
+        name="Flow Rate",
+        entity_registry_enabled_default=True,
+        native_unit_of_measurement="l/h",
+        value_fn=lambda data: math.floor(
+            data.get("freq") * data.get("dfsFaktor") * 60 * math.pow(10, -6)
+        ),
+    ),
     # LED Control Sensors
     EheimSensorDescription(
         key="ccv_brightness",
@@ -197,7 +209,7 @@ SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
         device_class=SensorDeviceClass.PH,
         name="Target pH",
         entity_registry_enabled_default=True,
-        value_fn=lambda data: _determine_current_setpoint(data) 
+        value_fn=lambda data: _determine_current_setpoint(data),
     ),
     EheimSensorDescription(
         key="ph_dayStart_time",
@@ -234,7 +246,10 @@ SENSOR_DESCRIPTIONS: tuple[EheimSensorDescription, ...] = (
         name="Next pH Service",
         entity_registry_enabled_default=True,
         value_fn=lambda data: (
-            dt_util.as_utc(dt_util.now().replace(hour=12, minute=0, second=0, microsecond=0) + timedelta(days=data.get("serviceTime", 0)))
+            dt_util.as_utc(
+                dt_util.now().replace(hour=12, minute=0, second=0, microsecond=0)
+                + timedelta(days=data.get("serviceTime", 0))
+            )
         ),
     ),
 )
@@ -252,6 +267,7 @@ SENSOR_GROUPS = {
         "night_mode_end_time",
         "night_mode_start_time",
         "current_speed",
+        "filter_flow_rate",
         "next_service",
         "filter_turn_off_time",
         "filter_turn_off_time",
